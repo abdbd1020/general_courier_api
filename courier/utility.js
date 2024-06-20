@@ -113,8 +113,8 @@ function createEcourierShipmentTrackRequestBody(trackingDetails) {
   if (trackingDetails.product_id) {
     requestBody.product_id = trackingDetails.product_id;
   }
-  if (trackingDetails.tracking_id) {
-    requestBody.ecr = trackingDetails.tracking_id;
+  if (trackingDetails.consignment_id) {
+    requestBody.ecr = trackingDetails.consignment_id;
   }
   return requestBody;
 }
@@ -150,6 +150,57 @@ function createEcourierShipmentSuccessResponseBody(response) {
   };
   return successResponseBody;
 }
+function createSteadfastShipmentSuccessResponseBody(response) {
+  const successResponseBody = {
+    code: response.status,
+    type: response.status === 200 ? "success" : "error",
+    message: response.message,
+    data:
+      response.status === 200
+        ? {
+            consignment_id: response.consignment.consignment_id,
+            merchant_order_id: response.consignment.invoice,
+            tracking_id: response.consignment.tracking_code,
+            recipient_name: response.consignment.recipient_name,
+            recipient_phone: response.consignment.recipient_phone,
+            recipient_address: response.consignment.recipient_address,
+            amount_to_collect: response.consignment.cod_amount,
+            order_status: response.consignment.status,
+            special_instruction: response.consignment.note,
+            created_at: response.consignment.created_at,
+            updated_at: response.consignment.updated_at,
+          }
+        : null,
+    errors: response.status !== 200 ? response.errors : null,
+  };
+  return successResponseBody;
+}
+function createSteadfastBulkShipmentSuccessResponseBody(response) {
+  const successResponseBody = {
+    code: response.status,
+    type: response.status === 200 ? "success" : "error",
+    message: response.message,
+    data:
+      response.status === 200
+        ? response.data.map((shipment) => {
+            return {
+              consignment_id: shipment.consignment_id,
+              merchant_order_id: shipment.invoice,
+              tracking_id: shipment.tracking_code,
+              recipient_name: shipment.recipient_name,
+              recipient_phone: shipment.recipient_phone,
+              recipient_address: shipment.recipient_address,
+              amount_to_collect: shipment.cod_amount,
+              order_status: shipment.status,
+              special_instruction: shipment.note,
+            };
+          })
+        : null,
+  };
+
+  return successResponseBody;
+}
+
 function createPathaoBulkShipmentSuccessResponseBody(response) {
   const successResponseBody = {
     code: response.code,
@@ -191,6 +242,18 @@ function createEcourierTrackShipmentSuccessResponseBody(response) {
       agent: response.query_data.agent,
       r_timing: response.query_data.r_timing,
       r_weight: response.query_data.r_weight,
+    },
+  };
+  return successResponseBody;
+}
+
+function createSteadfastTrackShipmentSuccessResponseBody(response) {
+  const successResponseBody = {
+    code: response.status,
+    type: response.status === 200 ? "success" : "error",
+    message: response.delivery_status,
+    data: {
+      order_status: response.delivery_status,
     },
   };
   return successResponseBody;
@@ -410,6 +473,18 @@ function createEcourierPaymentStatusSuccessResponseBody(response) {
   };
   return successResponseBody;
 }
+
+function createSteadfastCheckBalanceResponseBody(response) {
+  const successResponseBody = {
+    code: response.status,
+    type: response.status === 200 ? "success" : "error",
+    message: "Balance fetched successfully",
+    data: {
+      current_balance: response.current_balance,
+    },
+  };
+  return successResponseBody;
+}
 function createPathaoErrorResponseBody(error) {
   const errorResponseBody = {
     type: error.type,
@@ -425,6 +500,15 @@ function createEcourierErrorResponseBody(error) {
     messsaage: error.message,
     errors: error.errors,
     code: error.response_code,
+  };
+  return errorResponseBody;
+}
+function createSteadfastErrorResponseBody(error) {
+  const errorResponseBody = {
+    type: "error",
+    messsaage: error,
+    errors: [error],
+    code: 400,
   };
   return errorResponseBody;
 }
@@ -461,4 +545,9 @@ module.exports = {
 
   createSteadfastShipmentRequestBody,
   createSteadfastShipmentRequestBodyFromBulk,
+  createSteadfastShipmentSuccessResponseBody,
+  createSteadfastBulkShipmentSuccessResponseBody,
+  createSteadfastErrorResponseBody,
+  createSteadfastTrackShipmentSuccessResponseBody,
+  createSteadfastCheckBalanceResponseBody,
 };

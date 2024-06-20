@@ -32,9 +32,11 @@ async function createShipment(provider, shipmentDetails) {
       try {
         const requestBody =
           utility.createSteadfastShipmentRequestBody(shipmentDetails);
-        return await steadfast.createShipment(requestBody);
+        return utility.createSteadfastShipmentSuccessResponseBody(
+          await steadfast.createShipment(requestBody)
+        );
       } catch (error) {
-        throw error;
+        throw utility.createSteadfastErrorResponseBody(error);
       }
     default:
       throw new Error("Unsupported provider");
@@ -60,9 +62,11 @@ async function createBulkShipment(provider, bulkDhipmentDetails) {
           utility.createSteadfastShipmentRequestBodyFromBulk(
             bulkDhipmentDetails
           );
-        return await steadfast.createBulkShipment(requestBody);
+        return utility.createSteadfastBulkShipmentSuccessResponseBody(
+          await steadfast.createBulkShipment(requestBody)
+        );
       } catch (error) {
-        throw error;
+        throw utility.createSteadfastErrorResponseBody(error);
       }
     default:
       throw new Error("Unsupported provider");
@@ -92,20 +96,33 @@ async function trackShipment(provider, trackingDetails) {
       }
 
     case CONFIG.STEADFAST_TYPE:
-      if (trackingDetails.tracking_id) {
-        return await steadfast.trackShipment(
-          trackingDetails.tracking_id,
-          "trackingCode"
-        );
-      } else if (trackingDetails.invoice) {
-        return await steadfast.trackShipment(
-          trackingDetails.invoice,
-          "invoice"
-        );
-      } else if (trackingDetails.cid) {
-        return await steadfast.trackShipment(trackingDetails.cid, "cid");
-      } else {
-        throw new Error("Invalid tracking details");
+      try {
+        if (trackingDetails.tracking_id) {
+          return utility.createSteadfastTrackShipmentSuccessResponseBody(
+            await steadfast.trackShipment(
+              trackingDetails.tracking_id,
+              "trackingCode"
+            )
+          );
+        } else if (trackingDetails.merchant_order_id) {
+          return utility.createSteadfastTrackShipmentSuccessResponseBody(
+            await steadfast.trackShipment(
+              trackingDetails.merchant_order_id,
+              "invoice"
+            )
+          );
+        } else if (trackingDetails.consignment_id) {
+          return utility.createSteadfastTrackShipmentSuccessResponseBody(
+            await steadfast.trackShipment(
+              trackingDetails.consignment_id,
+              "consignment_id"
+            )
+          );
+        } else {
+          throw new Error("Invalid tracking details");
+        }
+      } catch (error) {
+        throw utility.createSteadfastErrorResponseBody(error);
       }
     default:
       throw new Error("Unsupported provider");
@@ -354,9 +371,11 @@ async function checkBalance(provider) {
       return null;
     case CONFIG.STEADFAST_TYPE:
       try {
-        return await steadfast.checkBalance();
+        return utility.createSteadfastCheckBalanceResponseBody(
+          await steadfast.checkBalance()
+        );
       } catch (error) {
-        throw error;
+        throw utility.createSteadfastErrorResponseBody(error);
       }
     default:
       throw new Error("Unsupported provider");
